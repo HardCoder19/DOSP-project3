@@ -14,7 +14,6 @@
 ## Largest Network Managed
 - The largest network successfully managed consists of **800** nodes.
 
-
 ## Running the Code
 
 To execute the Chord DHT implementation, use the following command:
@@ -31,6 +30,11 @@ To execute the Chord DHT implementation, use the following command:
 - `3`: Maximum number of requests each node will make.
 
 Make sure to adjust the parameters as needed for different network sizes and request limits.
+
+![Maximum Nodes](https://github.com/HardCoder19/DOSP-project3/blob/master/max.jpeg)
+
+## Number of Nodes VS Average Hop Count
+![Maximum Nodes](https://github.com/HardCoder19/DOSP-project3/blob/master/graph.png)
 
 
 # Chord Distributed Hash Table (DHT) Code Explanation

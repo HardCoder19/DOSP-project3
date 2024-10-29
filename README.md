@@ -12,7 +12,26 @@
 - Randomly generated node IDs ensure unique identification within the network.
 
 ## Largest Network Managed
-- The largest network successfully managed consists of **800** nodes. 
+- The largest network successfully managed consists of **800** nodes.
+
+
+## Running the Code
+
+To execute the Chord DHT implementation, use the following command:
+
+## Running the Code
+
+To execute the Chord DHT implementation, use the following command:
+
+```bash
+./dosp3 10 3
+```
+### Parameters
+- `10`: Number of nodes in the Chord network.
+- `3`: Maximum number of requests each node will make.
+
+Make sure to adjust the parameters as needed for different network sizes and request limits.
+
 
 # Chord Distributed Hash Table (DHT) Code Explanation
 

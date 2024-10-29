@@ -12,7 +12,7 @@
 - Randomly generated node IDs ensure unique identification within the network.
 
 ## Largest Network Managed
-- The largest network successfully managed consists of **[insert largest number of nodes here]** nodes. 
+- The largest network successfully managed consists of **500** nodes. 
 
 # Chord Distributed Hash Table (DHT) Code Explanation
 

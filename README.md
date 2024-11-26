@@ -1,106 +1,153 @@
-# DOSP PROJECT 3 
+* * * * *
 
-## Team Members
-- **Manav Mishra**
-- **Shubham Manoj Singh**
+Report: Reddit Simulation Using Protoactor-Go
+=============================================
 
-## What is Working
-- The Chord DHT implementation allows nodes to join a ring topology.
-- Each node maintains a finger table for efficient key lookups.
-- Nodes can handle requests to find keys and locate successors/predecessors.
-- The HopCounter actor tracks the total hops and requests, calculating average hops when all nodes converge.
-- Randomly generated node IDs ensure unique identification within the network.
+Overview
+--------
 
-## Largest Network Managed
-- The largest network successfully managed consists of **800** nodes.
+This project is a simulation of a simplified Reddit platform implemented using the **actor model** via the `protoactor-go` library. The system models various user interactions, such as posting, commenting, upvoting, and downvoting, while leveraging concurrency to simulate multiple users performing actions simultaneously. The project demonstrates the efficiency and fault tolerance of the actor model in handling distributed tasks.
 
-## Running the Code
+* * * * *
 
-To execute the Chord DHT implementation, use the following command:
+Code Explanation
+----------------
 
-## Running the Code
+### 1\. **`main.go`**
 
-To execute the Chord DHT implementation, use the following command:
+This file serves as the entry point of the application, performing the following tasks:
 
-```bash
-./dosp3 10 3
-```
-### Parameters
-- `10`: Number of nodes in the Chord network.
-- `3`: Maximum number of requests each node will make.
+1.  **Initialize Actor System**: The `protoactor-go` library is used to create an `ActorSystem`. This system serves as the framework for managing actors and their interactions.
 
-Make sure to adjust the parameters as needed for different network sizes and request limits.
+2.  **Spawn the `RedditEngine` Actor**:
 
-![Maximum Nodes](https://github.com/HardCoder19/DOSP-project3/blob/master/max.jpeg)
+    -   A `RedditEngine` actor is initialized and spawned. This actor is responsible for managing the core simulation, including users, subreddits, posts, and votes.
+    -   The actor system assigns a **Process ID (PID)** to the `RedditEngine`, enabling communication.
+3.  **Simulate User Interactions**:
 
-## Number of Nodes VS Average Hop Count
-![Maximum Nodes](https://github.com/HardCoder19/DOSP-project3/blob/master/graph.png)
+    -   The simulation involves `numUsers = 10` users performing actions such as registering, posting, commenting, and voting.
+    -   Each user's actions are simulated in a separate goroutine, allowing concurrent execution.
+4.  **Synchronization**:
 
+    -   A `sync.WaitGroup` is used to ensure all user actions complete before the program exits.
 
-# Chord Distributed Hash Table (DHT) Code Explanation
+* * * * *
 
-## Overview of Chord DHT
+### 2\. **`Simulation (1).go`**
 
-Chord is a scalable and efficient distributed hash table (DHT) that allows nodes to efficiently locate keys in a distributed environment. Each node in a Chord network is assigned an identifier (ID), and keys are hashed to these IDs. The network is structured as a circular ring, facilitating efficient lookups.
+This file defines the logic for simulating user behavior and their interactions with the system.
 
-## Key Components
+#### Key Functions:
 
-### 1. Actors
-The code uses an actor model for concurrency and message passing, consisting of three main actors: `ChordNode`, `HopCounter`, and `Main`.
+1.  **`SimulateUser`**:
 
-### 2. ChordNode Actor
-- **Properties**:
-  - `_id`: Unique identifier of the node.
-  - `_hop_counter`: Reference to the `HopCounter` actor for tracking metrics.
-  - `_predecessor` and `_successor`: References to neighboring nodes.
-  - `_finger_table`: An array maintaining pointers to nodes for efficient routing.
-  - `_total_hops`, `_requests`: Counters for monitoring performance.
-  - `_m`: Number of bits used for ID space.
-  - `_total_space`: Total number of possible IDs.
+    -   Simulates the actions of a user, including:
+        -   Registering and joining subreddits.
+        -   Creating posts and comments.
+        -   Sending and replying to messages.
+        -   Upvoting and downvoting posts.
+    -   Actions are randomized to mimic real-world variability.
+2.  **Message Passing**:
 
-- **Key Methods**:
-  - `create()`: Initializes the node, sets up its finger table, and initializes counters.
-  - `start_query()`: Begins querying for keys as long as the maximum number of requests hasn't been reached.
-  - `query_request()`: Generates a random key and initiates the search for it.
-  - `find_next_key()`: Recursively finds the node responsible for a given key, forwarding requests as necessary.
-  - `join_ring()`: Allows a new node to join the existing Chord network.
-  - `stabilize()`: Periodically checks and maintains the consistency of predecessor/successor relationships.
+    -   Uses defined protocol messages like `RegisterUser`, `CreatePost`, and `VotePost` to interact with the `RedditEngine` actor.
+    -   This ensures strict decoupling between the simulation logic and the actor system.
 
-### 3. HopCounter Actor
-- **Properties**:
-  - Tracks total hops and requests across all nodes.
-  - Keeps a count of converged nodes.
-  - Maintains an array of all `ChordNode` instances.
+* * * * *
 
-- **Key Methods**:
-  - `node_converged()`: Updates metrics when a node successfully completes its requests.
-  - `print_avg_hops()`: Calculates and prints the average number of hops for requests.
-  - `add_node()`: Adds a node to the system and retrieves its ID via message passing.
+### 3\. **`UpDownVote.go`**
 
-### 4. Main Actor
-- **Functionality**:
-  - Initializes the environment, including the number of nodes and requests.
-  - Creates nodes with unique IDs and establishes the Chord network.
-  - Initiates querying after the network is set up.
+This file implements the upvote and downvote functionality for posts.
 
-## How It Works
+#### Key Functions:
 
-1. **Initialization**:
-   - The `Main` actor creates a specified number of `ChordNode` instances with unique IDs. 
-   - Each node initializes its finger table and other state variables.
+1.  **`UpvoteRandomPost`**:
 
-2. **Joining the Ring**:
-   - The first node acts as the initial point of the network. Other nodes join by invoking the `join_ring()` method, which locates their position in the ring.
+    -   Checks if the user exists and is subscribed to a subreddit.
+    -   Randomly selects a post from the user's subscribed subreddits and increments its upvote count.
+    -   Updates the post creator's karma points.
+2.  **`DownvoteRandomPost`**:
 
-3. **Querying**:
-   - Each node starts querying for random keys. The process involves:
-     - Generating a random key.
-     - Using the finger table to efficiently find the node responsible for that key.
-     - Forwarding the request through the network until the key is located or the maximum requests are reached.
+    -   Similar logic to upvoting but decrements the upvote count and karma points.
+    -   Handles edge cases, such as ensuring votes cannot go below zero.
 
-4. **Performance Monitoring**:
-   - The `HopCounter` actor tracks performance metrics, providing insights into the average number of hops taken to find keys.
+* * * * *
 
-## Conclusion
+How the System Works
+--------------------
 
-This implementation of a Chord DHT provides a robust framework for understanding distributed systems. It emphasizes efficient routing and scalability, essential for managing large networks of nodes. Each component is designed to work concurrently, handling requests and maintaining the network structure dynamically.
+1.  **Actor Model**:
+
+    -   Actors are lightweight, independent units of computation.
+    -   The `RedditEngine` actor encapsulates all data and logic, communicating via asynchronous messages.
+2.  **Concurrency**:
+
+    -   Users' actions are simulated concurrently using Go's goroutines.
+    -   Synchronization mechanisms (e.g., `sync.WaitGroup`) are used to manage parallel execution.
+3.  **Randomized Actions**:
+
+    -   To simulate diverse and realistic behavior, actions such as subreddit selection, post creation, and voting are randomized.
+4.  **Error Handling**:
+
+    -   The system ensures robustness by validating user and post existence before performing actions like voting.
+
+* * * * *
+
+How to Run the Project
+----------------------
+
+### Prerequisites
+
+1.  **Install Go**:
+
+    -   Ensure Go is installed on your system. You can download it from [golang.org](https://golang.org/).
+2.  **Install Dependencies**:
+
+    -   Install the `protoactor-go` library:
+
+        ```
+        go get github.com/asynkron/protoactor-go/actor
+
+        ```
+
+### Steps to Run
+
+1.  **Clone the Repository**:
+
+    -   Clone the project repository to your local machine:
+
+        ```
+        git clone <repository-url>
+        cd <project-directory>
+
+        ```
+
+2.  **Run the Application**:
+
+    -   Execute the main file:
+
+        ```
+        go run main.go
+
+        ```
+
+### Expected Output
+
+-   The application initializes the actor system and simulates 10 users performing actions.
+-   You will see logs of user actions, such as:
+
+    ```
+    ActorSystem created
+    RedditEngine initialized
+    User1 created a post in subreddit golang.
+    User2 upvoted post ID 1 in subreddit golang.
+    Updated karma for user1. New Post Karma: 10
+    Finished simulating all users.
+
+    ```
+
+* * * * *
+
+Conclusion
+----------
+
+This project demonstrates the use of the actor model to build a robust, concurrent simulation of a Reddit-like platform. By leveraging `protoactor-go`, the system ensures modularity, scalability, and fault tolerance. Future enhancements could include persistent storage, moderation features, and visualizations of the simulation process.
